@@ -311,6 +311,8 @@
       overflow: hidden;
       margin-bottom: 10px;
       display: none;
+      max-height: 250px;
+      overflow-y: auto;
     }
     .store-dropdown.visible { display: block; }
     .store-option {
@@ -596,7 +598,7 @@
     <div class="label">Your favourite stores</div>
     <div class="store-search-box">
       <svg class="store-search-icon" viewBox="0 0 16 16"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg>
-      <input class="store-search-input" type="text" id="storeSearchInput" placeholder="Search stores — e.g. Zara, ASOS…" autocomplete="off">
+      <input class="store-search-input" type="text" id="storeSearchInput" placeholder="Search stores — e.g. Edikted, Cider, Zara…" autocomplete="off">
     </div>
     <div class="store-dropdown" id="storeDropdown"></div>
     <div class="selected-chips" id="selectedChips"></div>
@@ -624,17 +626,21 @@
 </div>
 
 <script>
+  // Expanded store pool featuring top requests & high-intent retail domains
   const STORES = [
-    'Zara', 'Mango', 'H&M', 'ASOS', 'COS', 'Arket',
-    '& Other Stories', 'Sézane', 'Reformation', 'Revolve',
-    'Free People', 'Urban Outfitters', 'Anthropologie',
-    'Nordstrom', 'Shopbop', 'Net-A-Porter', 'SSENSE', 'Uniqlo',
-    'Princess Polly', 'PrettyLittleThing', 'Missguided', 'Abercrombie',
-    'Topshop', 'Banana Republic', 'J.Crew', 'Everlane', 'Madewell',
-  ];
+    'Edikted', 'Cider', 'Aelfric Eden', 'SUUKSESS', 'Zara', 'Mango', 
+    'H&M', 'ASOS', 'COS', 'Arket', '& Other Stories', 'Sézane', 
+    'Reformation', 'Revolve', 'Free People', 'Urban Outfitters', 
+    'Anthropologie', 'Nordstrom', 'Shopbop', 'Net-A-Porter', 'SSENSE', 
+    'Uniqlo', 'Princess Polly', 'PrettyLittleThing', 'Garage', 'Aerie',
+    'PacSun', 'White Fox', 'Bershka', 'Pull&Bear', 'Stradivarius', 
+    'Abercrombie', 'Etsy', 'Amazon', 'Princess Polly', 'Alo Yoga', 
+    'Lululemon', 'Gymshark', 'Kith', 'Skims', 'Meshki', 'Oh Polly'
+  ].sort();
 
   let hasImage = false;
-  let selectedStores = new Set(['Zara', 'Mango', 'ASOS', 'COS', '& Other Stories', 'Sézane']);
+  // Default selected favorites
+  let selectedStores = new Set(['Edikted', 'Cider', 'Aelfric Eden', 'Zara', 'Revolve']);
   let allStores = false;
 
   // ── STORE SEARCH ──
@@ -657,7 +663,7 @@
     const q = query.toLowerCase().trim();
     const matches = STORES.filter(s => s.toLowerCase().includes(q));
     if (!q || !matches.length) { storeDropdown.classList.remove('visible'); return; }
-    storeDropdown.innerHTML = matches.slice(0, 8).map(s => `
+    storeDropdown.innerHTML = matches.slice(0, 15).map(s => `
       <div class="store-option ${selectedStores.has(s) ? 'selected' : ''}" data-store="${s}">
         ${s}
         <svg class="check" viewBox="0 0 14 14"><polyline points="2,7 5.5,11 12,3"/></svg>
@@ -696,7 +702,6 @@
     document.getElementById('storesWrap').classList.toggle('dimmed', allStores);
   }
 
-  // Keyboard support for toggle
   document.getElementById('toggleTrack').addEventListener('keydown', e => {
     if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleMode(); }
   });
@@ -774,9 +779,12 @@
       </div>`;
   }
 
-  // ── TRUSTED STORES ──
-  // Maps display name → domains to match against result URLs
+  // ── TRUSTED STORE DOMAINS ──
   const STORE_DOMAINS = {
+    'Edikted':           ['edikted.com'],
+    'Cider':             ['shopcider.com', 'cider.com'],
+    'Aelfric Eden':      ['aelfriceden.com'],
+    'SUUKSESS':          ['suuksess.com', 'amazon.com/suuksess'],
     'Zara':              ['zara.com'],
     'Mango':             ['mango.com'],
     'H&M':               ['hm.com', 'h&m.com'],
@@ -795,11 +803,28 @@
     'Net-A-Porter':      ['net-a-porter.com'],
     'SSENSE':            ['ssense.com'],
     'Uniqlo':            ['uniqlo.com'],
+    'Princess Polly':    ['princesspolly.com'],
+    'PrettyLittleThing': ['prettylittlething.com'],
+    'Garage':            ['garageclothing.com'],
+    'Aerie':             ['ae.com/aerie', 'aerie.com'],
+    'PacSun':            ['pacsun.com'],
+    'White Fox':         ['whitefoxboutique.com'],
+    'Bershka':           ['bershka.com'],
+    'Pull&Bear':         ['pullandbear.com'],
+    'Stradivarius':      ['stradivarius.com'],
+    'Abercrombie':       ['abercrombie.com'],
+    'Etsy':              ['etsy.com'],
+    'Amazon':            ['amazon.com'],
+    'Alo Yoga':          ['aloyoga.com'],
+    'Lululemon':         ['lululemon.com'],
+    'Gymshark':          ['gymshark.com'],
+    'Kith':              ['kith.com'],
+    'Skims':             ['skims.com'],
+    'Meshki':            ['meshki.com'],
+    'Oh Polly':          ['ohpolly.com']
   };
 
   const SERPAPI_KEY = 'e45f7be9114e337ba103d5e582a46fdf592c33f35a06ca1f5af3e5be3fc6e6e7';
-
-  // All trusted domains flattened
   const ALL_TRUSTED_DOMAINS = Object.values(STORE_DOMAINS).flat();
 
   function getDomainLabel(url) {
@@ -831,7 +856,6 @@
     } catch { return false; }
   }
 
-  // currentImageSrc holds the base64 or URL of the uploaded image
   let currentImageSrc = null;
 
   async function doSearch() {
@@ -846,29 +870,14 @@
       </div>`;
 
     try {
-      // SerpApi Google Lens visual search
-      // We use the url param for URL images, or upload base64 for file uploads
-      const isBase64 = currentImageSrc.startsWith('data:');
-      let apiUrl;
-
-      if (isBase64) {
-        // For uploaded files: use Google Lens with image_url via a data URL proxy approach
-        // SerpApi supports image_url for publicly accessible URLs
-        // For base64, we send it as url encoded
-        apiUrl = `https://serpapi.com/search.json?engine=google_lens&url=${encodeURIComponent(currentImageSrc)}&api_key=${SERPAPI_KEY}&hl=en&country=us`;
-      } else {
-        apiUrl = `https://serpapi.com/search.json?engine=google_lens&url=${encodeURIComponent(currentImageSrc)}&api_key=${SERPAPI_KEY}&hl=en&country=us`;
-      }
+      let apiUrl = `https://serpapi.com/search.json?engine=google_lens&url=${encodeURIComponent(currentImageSrc)}&api_key=${SERPAPI_KEY}&hl=en&country=us`;
 
       const response = await fetch(apiUrl);
       if (!response.ok) throw new Error('Search failed');
       const data = await response.json();
 
-      // Google Lens returns visual_matches
       const visualMatches = data.visual_matches || [];
       const shoppingResults = data.shopping_results || [];
-
-      // Combine and filter by store preference
       const combined = [...shoppingResults, ...visualMatches];
       const budget = parseBudget(document.getElementById('budgetInput').value);
 
@@ -884,7 +893,6 @@
         return true;
       });
 
-      // Deduplicate by URL
       const seen = new Set();
       pool = pool.filter(r => {
         const url = r.link || r.url || '';
